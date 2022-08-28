@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: elasticsearch-configmap
+    labels:
+        app: elasticsearch
+data:
+  elasticsearch.yml: |-
+    network.host: 0.0.0.0
+    node.roles: ["data", "master", "ingest"]
+    thread_pool.snapshot.max: 8
+    xpack.security.enabled: false

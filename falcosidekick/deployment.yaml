@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: falco-falcosidekick
+  namespace: log-stack
+  labels:
+    app.kubernetes.io/name: falcosidekick
+    helm.sh/chart: falcosidekick-0.5.4
+    app.kubernetes.io/instance: falco
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: falcosidekick
+      app.kubernetes.io/instance: falco
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: falcosidekick
+        app.kubernetes.io/instance: falco
+      annotations:
+        checksum/config: 6f07b790a989b05be2ddc38c5647fc19561d7c33946a924ad1d5f885287b4707
+    spec:
+      serviceAccountName: falco-falcosidekick
+      securityContext:
+        fsGroup: 1234
+        runAsUser: 1234
+      containers:
+        - name: falcosidekick
+          image: "docker.io/falcosecurity/falcosidekick"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 2801
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          envFrom:
+            - secretRef:
+                name: falco-falcosidekick
+          env:
+            - name: DEBUG
+              value: "true"
+            - name: CUSTOMFIELDS
+              value: ""
+            - name: MUTUALTLSFILESPATH
+              value: "/etc/certs"
+          resources: {}
